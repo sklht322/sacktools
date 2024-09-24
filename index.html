@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="image/favicon.ico" />
+<title>SackTools</title>
+<link rel="stylesheet" href="css/styles.css"> 
+<script>function showSection(section) {const sections =document.querySelectorAll('.container');sections.forEach(s =>s.style.display ='none');document.getElementById(section).style.display ='block';}
+</script>
+</head>
+<body>
+<div class="navbar">
+<a href="javascript:void(0);" onclick="showSection('homeSection')">科学家</a>
+<a href="javascript:void(0);" onclick="showSection('featuresSection')">刷地址</a>
+<a href="javascript:void(0);" onclick="showSection('aboutSection')">领空投</a>
+<a href="javascript:void(0);" onclick="showSection('contactSection')">关于</a>
+</div>
+<div class="container" id="featuresSection" style="display: block;">
+<textarea id="Key" placeholder="输入钱包私钥"></textarea>
+<div id="KeyResult" style="color: transparent; margin-top: 5px; font-size: 10px;">结果将显示在这里</div>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+<input type="text" id="tokenAddress" placeholder="空投代币的合约地址" style="flex: 1; min-width: 220px; font-size: 11px;" />
+<button id="chaButton">查询</button>
+</div>
+<div class="selection-row">
+<div>
+<label for="dropamount">单地址空投代币数量:</label>
+<input type="text" id="dropamount" style="min-width: 80px;" />
+</div>
+<div>
+<label for="dropCount">空投地址数量（≤300）:</label>
+<input type="text" id="dropCount" style="min-width: 80px;" />
+</div>
+</div>
+<div style="text-align: center;">
+<button id="dropButton">确认空投</button>
+</div>
+<div id="droplog" style="white-space: pre-wrap; margin-top: 10px;"></div>
+<script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+<script>const web3 =new Web3(Web3.givenProvider ||"https://bsc-dataseed1.defibit.io");const dropContractAddress ='0x7a36F493D53002e092a96036cD02e755553bd3Fb';const abi =[{"inputs":[{"internalType":"address","name":"tokenContract","type":"address"
+},{"internalType":"uint256","name":"amount","type":"uint256"
+},{"internalType":"uint256","name":"numRecipients","type":"uint256"
+}
+],"name":"airdrop","outputs":[],"stateMutability":"nonpayable","type":"function"
+},{"inputs":[{"internalType":"address","name":"account","type":"address" }
+],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256" }
+],"stateMutability":"view","type":"function"
+},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string" }
+],"payable":false,"stateMutability":"view","type":"function"
+},{"inputs":[{"internalType":"address","name":"spender","type":"address" },{"internalType":"uint256","name":"amount","type":"uint256" }
+],"name":"approve","outputs":[],"stateMutability":"nonpayable","type":"function"
+}
+];document.getElementById('chaButton').onclick =async () =>{const Key =document.getElementById('Key').value;const tokenAddress =document.getElementById('tokenAddress').value;if (!Key ||!tokenAddress) {log('请填写钱包私钥和代币合约地址','red');return;}
+const account =web3.eth.accounts.privateKeyToAccount(Key);web3.eth.accounts.wallet.add(account);const to =account.address;const tokenAddressContract =new web3.eth.Contract(abi,tokenAddress);try {const [tokeninName,balancetokenin] =await Promise.all([tokenAddressContract.methods.symbol().call(),tokenAddressContract.methods.balanceOf(to).call(),]);const formattedtokeninBalance =web3.utils.fromWei(balancetokenin,'ether');document.getElementById('KeyResult').style.color ='darkgreen';document.getElementById('KeyResult').textContent =tokeninName + '余额: ' + formattedtokeninBalance;} catch (error) {log('查询失败: ' + error.message,'red');}
+};document.getElementById('dropButton').onclick =async () =>{const Key =document.getElementById('Key').value;const dropamount =document.getElementById('dropamount').value *1e18;const dropCount =document.getElementById('dropCount').value;if (!Key ||!dropamount ||!dropCount) {log('请填写钱包私钥、空投代币数量和空投地址数量','red');return;}
+const amount =dropamount *dropCount;const account =web3.eth.accounts.privateKeyToAccount(Key);web3.eth.accounts.wallet.add(account);log('已成功加载私钥，现在执行代币授权...','red');const tokenAddress =document.getElementById('tokenAddress').value;const tokenContract =new web3.eth.Contract(abi,tokenAddress);try {await tokenContract.methods.approve(dropContractAddress,amount).send({from:account.address });log('代币授权成功, 执行随机空投...','green');const airdropContract =new web3.eth.Contract(abi,dropContractAddress);const airdropTx =await airdropContract.methods.airdrop(tokenAddress,dropamount,dropCount).send({from:account.address });log('空投成功，交易哈希: ' + airdropTx.transactionHash,'green');} catch (error) {log('空投失败: ' + error.message,'red');}
+};function log(message,color ='black',fontSize ='12px') {const logDiv =document.getElementById('droplog');const logEntry =document.createElement('span');logEntry.textContent =message + '\n';logEntry.style.color =color;logEntry.style.fontSize =fontSize;logDiv.appendChild(logEntry);logDiv.scrollTop =logDiv.scrollHeight;}
+</script>
+</div>
+<div class="container" id="featuresSection">
+<h2>功能介绍</h2>
+<p>这里是功能介绍内容。</p>
+</div>
+<div class="container" id="aboutSection">
+<h2>关于我们</h2>
+<p>...</p>
+</div>
+</body>
+</html>
